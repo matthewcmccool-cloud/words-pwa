@@ -1,9 +1,33 @@
+const rateLimit = new Map();
+
+const WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const MAX_REQUESTS = 20;
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const entry = rateLimit.get(ip);
+
+  if (!entry || now - entry.start > WINDOW_MS) {
+    rateLimit.set(ip, { start: now, count: 1 });
+    return false;
+  }
+
+  entry.count++;
+  if (entry.count > MAX_REQUESTS) return true;
+  return false;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { word } = req.body;
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+  if (isRateLimited(ip)) {
+    return res.status(429).json({ error: 'Slow down — try again in a bit.' });
+  }
+
+  const { word } = req.body || {};
 
   if (!word || typeof word !== 'string' || word.trim().length === 0 || word.length > 50) {
     return res.status(400).json({ error: 'Invalid word' });
@@ -34,6 +58,7 @@ export default async function handler(req, res) {
 
     const data = await response.json();
     const definition = data.content?.[0]?.text || 'Could not fetch definition.';
+
     return res.status(200).json({ definition });
   } catch {
     return res.status(500).json({ error: 'Failed to fetch definition' });
