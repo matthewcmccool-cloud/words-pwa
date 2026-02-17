@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Words">
+  <meta name="theme-color" content="#2c2820">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <title>Words</title>
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Newsreader', Georgia, serif;
+      background: #f5f0e8;
+      color: #2c2820;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overscroll-behavior: none;
+    }
+
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 0 20px;
+      padding-top: max(60px, env(safe-area-inset-top, 60px));
+      padding-bottom: max(80px, env(safe-area-inset-bottom, 80px));
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      border-bottom: 1px solid #d4cfc4;
+      padding-bottom: 12px;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .count {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      font-weight: 300;
+      color: #8a8578;
+      letter-spacing: 0.5px;
+    }
+
+    .settings-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      color: #8a8578;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      transition: color 0.2s;
+    }
+
+    .settings-btn:hover { color: #2c2820; }
+
+    /* Input */
+    .input-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .input-row input {
+      flex: 1;
+      font-family: 'Newsreader', Georgia, serif;
+      font-size: 20px;
+      color: #2c2820;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid #d4cfc4;
+      padding: 8px 0;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-row input:focus {
+      border-bottom-color: #5c5647;
+    }
+
+    .input-row input::placeholder {
+      color: #8a8578;
+      font-style: italic;
+    }
+
+    .input-row input:disabled {
+      opacity: 0.4;
+    }
+
+    .add-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 24px;
+      font-weight: 300;
+      color: #2c2820;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      line-height: 1;
+      transition: opacity 0.2s;
+    }
+
+    .add-btn:disabled { opacity: 0.2; cursor: default; }
+
+    /* Loading bar */
+    .loading-bar {
+      height: 2px;
+      background: #e2ddd3;
+      border-radius: 1px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .loading-fill {
+      height: 100%;
+      width: 50%;
+      background: #8a8578;
+      border-radius: 1px;
+      animation: shimmer 1s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(200%); }
+    }
+
+    /* Word list */
+    .list {
+      margin-top: 28px;
+    }
+
+    .card {
+      padding: 18px 0;
+      border-bottom: 1px solid #e2ddd3;
+      animation: fadeIn 0.3s ease both;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .word {
+      font-size: 19px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .card-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .date {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 300;
+      color: #a8a194;
+      letter-spacing: 0.3px;
+    }
+
+    .delete-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 18px;
+      color: #a8a194;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+      transition: color 0.2s;
+    }
+
+    .delete-btn:hover { color: #c45; }
+
+    .definition {
+      font-size: 15px;
+      font-style: italic;
+      color: #5c5647;
+      line-height: 1.55;
+    }
+
+    .empty {
+      font-size: 16px;
+      font-style: italic;
+      color: #a8a194;
+      text-align: center;
+      margin-top: 48px;
+    }
+
+    .card.removing {
+      opacity: 0;
+      transform: translateX(-20px);
+      transition: opacity 0.25s, transform 0.25s;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Settings overlay */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(44, 40, 32, 0.4);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+    }
+
+    .overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .settings-panel {
+      background: #f5f0e8;
+      border-top: 1px solid #d4cfc4;
+      width: 100%;
+      max-width: 520px;
+      padding: 28px 24px;
+      padding-bottom: max(28px, env(safe-area-inset-bottom, 28px));
+      border-radius: 16px 16px 0 0;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .overlay.open .settings-panel {
+      transform: translateY(0);
+    }
+
+    .settings-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      letter-spacing: -0.3px;
+    }
+
+    .settings-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      font-weight: 300;
+      color: #8a8578;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .settings-input {
+      width: 100%;
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      color: #2c2820;
+      background: #ece7dd;
+      border: 1px solid #d4cfc4;
+      border-radius: 8px;
+      padding: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .settings-input:focus {
+      border-color: #5c5647;
+    }
+
+    .settings-hint {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: #a8a194;
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    .settings-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 20px;
+    }
+
+    .save-btn {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 400;
+      color: #f5f0e8;
+      background: #2c2820;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 24px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .save-btn:hover { opacity: 0.8; }
+
+    .key-status {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      margin-top: 6px;
+    }
+
+    .key-status.ok { color: #5a7a5a; }
+    .key-status.missing { color: #c45; }
+  </style>
+</head>
+<body>
+  <div class="app" id="app"></div>
+
+  <script>
+    // --- State ---
+    let words = JSON.parse(localStorage.getItem('words') || '[]');
+    let apiKey = localStorage.getItem('claude_api_key') || '';
+    let loading = false;
+    let settingsOpen = false;
+
+    // --- API ---
+    async function fetchDefinition(word) {
+      if (!apiKey) return 'Add your Claude API key in settings.';
+      try {
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 200,
+            messages: [{
+              role: 'user',
+              content: `Define "${word}" in 1-2 concise sentences. Just the definition, no preamble. If not a real word, say "Not a recognized word."`
+            }]
+          })
+        });
+        const data = await res.json();
+        return data.content?.[0]?.text || 'Could not fetch definition.';
+      } catch {
+        return 'Could not fetch definition. Check your API key.';
+      }
+    }
+
+    // --- Save ---
+    function saveWords() {
+      localStorage.setItem('words', JSON.stringify(words));
+    }
+
+    // --- Render ---
+    function render() {
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <div class="header">
+          <h1>words</h1>
+          <div class="header-right">
+            <span class="count">${words.length} saved</span>
+            <button class="settings-btn" onclick="toggleSettings()">⚙</button>
+          </div>
+        </div>
+
+        <div class="input-row">
+          <input
+            id="wordInput"
+            type="text"
+            placeholder="${loading ? 'looking it up…' : 'drop a word'}"
+            ${loading ? 'disabled' : ''}
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+          >
+          <button class="add-btn" onclick="addWord()" ${loading ? 'disabled' : ''}>+</button>
+        </div>
+
+        ${loading ? '<div class="loading-bar"><div class="loading-fill"></div></div>' : ''}
+
+        <div class="list">
+          ${words.length === 0 && !loading
+            ? '<p class="empty">type a word and hit enter</p>'
+            : words.map((w, i) => `
+              <div class="card" id="card-${w.id}" style="animation-delay: ${i * 40}ms">
+                <div class="card-top">
+                  <span class="word">${esc(w.word)}</span>
+                  <div class="card-right">
+                    <span class="date">${esc(w.date)}</span>
+                    <button class="delete-btn" onclick="deleteWord('${w.id}')">×</button>
+                  </div>
+                </div>
+                <p class="definition">${esc(w.definition)}</p>
+              </div>
+            `).join('')}
+        </div>
+
+        <div class="overlay ${settingsOpen ? 'open' : ''}" onclick="closeOverlay(event)">
+          <div class="settings-panel" onclick="event.stopPropagation()">
+            <div class="settings-title">settings</div>
+            <label class="settings-label">claude api key</label>
+            <input
+              class="settings-input"
+              id="apiKeyInput"
+              type="password"
+              placeholder="sk-ant-..."
+              value="${esc(apiKey)}"
+            >
+            <div class="key-status ${apiKey ? 'ok' : 'missing'}">
+              ${apiKey ? '✓ key saved' : '✗ no key — definitions won\'t work'}
+            </div>
+            <div class="settings-hint">
+              Get a key at console.anthropic.com → API Keys.<br>
+              Stored locally on this device only.
+            </div>
+            <div class="settings-actions">
+              <button class="save-btn" onclick="saveSettings()">save</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Re-attach input listener
+      const input = document.getElementById('wordInput');
+      if (input && !loading) {
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') addWord();
+        });
+        // Restore focus after re-render (but not if settings open)
+        if (!settingsOpen) input.focus();
+      }
+    }
+
+    function esc(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    // --- Actions ---
+    async function addWord() {
+      const input = document.getElementById('wordInput');
+      const word = input.value.trim().toLowerCase();
+      if (!word || loading) return;
+
+      // Skip duplicates
+      if (words.some(w => w.word === word)) {
+        input.value = '';
+        render();
+        return;
+      }
+
+      loading = true;
+      input.value = '';
+      render();
+
+      const definition = await fetchDefinition(word);
+
+      words.unshift({
+        id: Date.now().toString(),
+        word,
+        definition,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      });
+
+      saveWords();
+      loading = false;
+      render();
+    }
+
+    function deleteWord(id) {
+      const card = document.getElementById('card-' + id);
+      if (card) {
+        card.classList.add('removing');
+        setTimeout(() => {
+          words = words.filter(w => w.id !== id);
+          saveWords();
+          render();
+        }, 250);
+      }
+    }
+
+    function toggleSettings() {
+      settingsOpen = !settingsOpen;
+      render();
+    }
+
+    function closeOverlay(e) {
+      if (e.target.classList.contains('overlay')) {
+        settingsOpen = false;
+        render();
+      }
+    }
+
+    function saveSettings() {
+      const input = document.getElementById('apiKeyInput');
+      apiKey = input.value.trim();
+      localStorage.setItem('claude_api_key', apiKey);
+      settingsOpen = false;
+      render();
+    }
+
+    // --- Init ---
+    render();
+
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+  </script>
+</body>
+</html>
