@@ -1,10 +1,10 @@
 const CACHE_NAME = 'words-v1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png'
+  './',
+  './index.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png'
 ];
 
 self.addEventListener('install', e => {
@@ -22,8 +22,7 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Don't cache API calls
-  if (e.request.url.includes('anthropic.com')) return;
+  if (e.request.url.includes('dictionaryapi.dev')) return;
 
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
