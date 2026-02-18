@@ -1,6 +1,6 @@
 const rateLimit = new Map();
 
-const WINDOW_MS = 60 * 60 * 1000; // 1 hour
+const WINDOW_MS = 60 * 60 * 1000;
 const MAX_REQUESTS = 20;
 
 function isRateLimited(ip) {
